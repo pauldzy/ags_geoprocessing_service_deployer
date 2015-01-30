@@ -6,6 +6,7 @@ import xml.dom.minidom as DOM;
 #------------------------------------------------------------------------------
 #
 # Waters Services Geoprocessing Services Deployment Script
+# Version 2.0
 #
 #------------------------------------------------------------------------------
 
@@ -14,8 +15,7 @@ import xml.dom.minidom as DOM;
 ags_con_name = "industux";
 
 # The name of your rad_ags SDE database connection in ArcCatalog
-# This item is hard-coded in the toolbox
-# If you change this here you need to change the toolbox as well
+# This can be changed as needed (new!)
 rad_con_name = "rad_ags";
 
 # Service properties handled directly by arcpy.CreateGPSDDraft
@@ -98,70 +98,170 @@ def soe_property(doc,soe,soeProperty,soePropertyValue):
 #- Step 10
 #- Verify that the connections exist and are good
 #------------------------------------------------------------------------------
-arcpy.AddMessage("Validating ArcCatalog Connections");
-rad_con = "Database Connections\\" + rad_con_name + ".sde";
-if not arcpy.Exists(rad_con):
-   print
-   print "  Connection named Database Connections\\" + rad_con_name + ".sde not found."
-   rad_con2 = os.environ['USERPROFILE'] + "\\AppData\\Roaming\\ESRI\\Desktop10.2\\ArcCatalog\\" + rad_con_name + ".sde"
-   
-   if arcpy.Exists(rad_con2):
-      rad_con = rad_con2;
-      
-   else:
-      print
-      print "  No luck checking " + rad_con2
-      rad_con3 = os.environ['USERPROFILE'] + "\\AppData\\Roaming\\ESRI\\Desktop10.1\\ArcCatalog\\" + ags_con_name + ".sde"
-      
-      if arcpy.Exists(rad_con3):
-         rad_con = rad_con3;
-      
-      else:  
-         print
-         print "  No luck checking " + rad_con3
-         print "  Unable to find a valid connection for " + rad_con_name
-         exit(-1);
+arcpy.AddMessage("Validating ArcCatalog Connections:");
          
 ags_con = "GIS Servers\\" + ags_con_name + ".ags";
-if not arcpy.Exists(ags_con):
-   print
-   print "  Connection named GIS Servers\\" + ags_con_name + ".ags not found."
-   ags_con2 = os.environ['USERPROFILE'] + "\\AppData\\Roaming\\ESRI\\Desktop10.2\\ArcCatalog\\" + ags_con_name + ".ags"
+if arcpy.Exists(ags_con):
+   arcpy.AddMessage("   Service will be deployed to " + ags_con);
+   
+else:
+   arcpy.AddMessage(" ");
+   arcpy.AddMessage("  Connection named GIS Servers\\" + ags_con_name + ".ags not found.");
+   ags_con2 = os.environ['USERPROFILE'] + "\\AppData\\Roaming\\ESRI\\Desktop10.3\\ArcCatalog\\" + ags_con_name + ".ags"
    
    if arcpy.Exists(ags_con2):
       ags_con = ags_con2;
+      arcpy.AddMessage("   Service will be deployed to " + ags_con);
       
    else:
-      print
-      print "  No luck checking " + ags_con2
-      ags_con3 = os.environ['USERPROFILE'] + "\\AppData\\Roaming\\ESRI\\Desktop10.1\\ArcCatalog\\" + ags_con_name + ".ags"
+      arcpy.AddMessage(" ");
+      arcpy.AddMessage("  No luck checking " + ags_con2);
+      ags_con3 = os.environ['USERPROFILE'] + "\\AppData\\Roaming\\ESRI\\Desktop10.2\\ArcCatalog\\" + ags_con_name + ".ags"
       
       if arcpy.Exists(ags_con3):
          ags_con = ags_con3;
-      
+         arcpy.AddMessage("   Service will be deployed to " + ags_con);
+         
       else:  
-         print
-         print "  No luck checking " + ags_con3
-         print "  Unable to find a valid connection for " + ags_con_name
-         exit(-1);
+         arcpy.AddMessage(" ");
+         arcpy.AddMessage("  No luck checking " + ags_con3);
+         ags_con4 = os.environ['USERPROFILE'] + "\\AppData\\Roaming\\ESRI\\Desktop10.1\\ArcCatalog\\" + ags_con_name + ".ags"
+         
+         if arcpy.Exists(ags_con4):
+            ags_con = ags_con4;
+            arcpy.AddMessage("   Service will be deployed to " + ags_con);
+            
+         else:  
+            arcpy.AddMessage(" ");
+            arcpy.AddMessage("  No luck checking " + ags_con4);
+            arcpy.AddMessage("  Unable to find a valid connection for " + ags_con_name);
+            exit(-1);
+         
+rad_con = "Database Connections\\" + rad_con_name + ".sde";
+if arcpy.Exists(rad_con):
+   arcpy.AddMessage("   Service will utilize geodatabase at " + rad_con);
+   
+else:
+   arcpy.AddMessage(" ");
+   arcpy.AddMessage("  Connection named Database Connections\\" + rad_con_name + ".sde not found.");
+   rad_con2 = os.environ['USERPROFILE'] + "\\AppData\\Roaming\\ESRI\\Desktop10.3\\ArcCatalog\\" + rad_con_name + ".sde"
+   
+   if arcpy.Exists(rad_con2):
+      rad_con = rad_con2;
+      arcpy.AddMessage("   Service will utilize geodatabase at " + rad_con);
+      
+   else:
+      arcpy.AddMessage(" ");
+      arcpy.AddMessage("  No luck checking " + rad_con2);
+      rad_con3 = os.environ['USERPROFILE'] + "\\AppData\\Roaming\\ESRI\\Desktop10.2\\ArcCatalog\\" + ags_con_name + ".sde"
+      
+      if arcpy.Exists(rad_con3):
+         rad_con = rad_con3;
+         arcpy.AddMessage("   Service will utilize geodatabase at " + rad_con);
+         
+      else:  
+         arcpy.AddMessage(" ");
+         arcpy.AddMessage("  No luck checking " + rad_con3);
+         rad_con4 = os.environ['USERPROFILE'] + "\\AppData\\Roaming\\ESRI\\Desktop10.1\\ArcCatalog\\" + ags_con_name + ".sde"
+         
+         if arcpy.Exists(rad_con4):
+            rad_con = rad_con4;
+            arcpy.AddMessage("   Service will utilize geodatabase at " + rad_con);
+            
+         else:  
+            arcpy.AddMessage(" ");
+            arcpy.AddMessage("  No luck checking " + rad_con4);
+            arcpy.AddMessage("  Unable to find a valid connection for " + rad_con_name);
+            exit(-1);
 
+try:
+   desc = arcpy.Describe(rad_con);
+   cp = desc.connectionProperties;
+
+except arcpy.ExecuteError:
+   print(arcpy.GetMessages(2));
+       
+arcpy.AddMessage("      User    : " + cp.user);
+arcpy.AddMessage("      Instance: " + cp.instance);
+   
 #------------------------------------------------------------------------------
 #- Step 20
+#- Alter the database sde connection in the toolbox
+#------------------------------------------------------------------------------
+arcpy.AddMessage("Adjusting toolbox geodatabase connection.");
+temp_tool = arcpy.CreateScratchName(
+    "WATERS_Services"
+   ,".pyt"
+   ,None
+   ,arcpy.env.scratchFolder
+);
+
+new_file = open(temp_tool,'w');
+old_file = open("WATERS_Services.pyt");
+for line in old_file:
+   new_file.write(
+      line.replace(
+          "Database Connections\\rad_ags.sde"
+         ,"Database Connections\\" + rad_con_name + ".sde"
+      )
+   );
+   
+new_file.close();
+old_file.close();
+
+xml_1 = temp_tool.replace(".pyt",".pyt.xml");
+
+new_file = open(xml_1,'w');
+old_file = open("WATERS_Services.pyt.xml");
+for line in old_file:
+   new_file.write(line);
+new_file.close();
+old_file.close();
+
+xml_2 = temp_tool.replace(".pyt",".NavigationService.pyt.xml");
+
+new_file = open(xml_2,'w');
+old_file = open("WATERS_Services.NavigationService.pyt.xml");
+for line in old_file:
+   new_file.write(line);
+new_file.close();
+old_file.close();
+
+xml_3 = temp_tool.replace(".pyt",".NavigationDelineationService.pyt.xml");
+
+new_file = open(xml_3,'w');
+old_file = open("WATERS_Services.NavigationDelineationService.pyt.xml");
+for line in old_file:
+   new_file.write(line);
+new_file.close();
+old_file.close();
+
+xml_4 = temp_tool.replace(".pyt",".UpstreamDownstreamService.pyt.xml");
+
+new_file = open(xml_4,'w');
+old_file = open("WATERS_Services.UpstreamDownstreamService.pyt.xml");
+for line in old_file:
+   new_file.write(line);
+new_file.close();
+old_file.close();
+   
+#------------------------------------------------------------------------------
+#- Step 30
 #- Import the toolbox
 #------------------------------------------------------------------------------
-arcpy.AddMessage("Importing the toolbox");
+arcpy.AddMessage("Importing the toolbox.");
 try:
-   owservices = arcpy.ImportToolbox("WATERS_Services.pyt");
+   owservices = arcpy.ImportToolbox(temp_tool);
 
 except Exception as err:
    arcpy.AddError(err)
    exit -1;
 
 #------------------------------------------------------------------------------
-#- Step 30
+#- Step 40
 #- Run Navigation Service
 #------------------------------------------------------------------------------
-arcpy.AddMessage("Dry running Navigation Service");
+arcpy.AddMessage("Dry running Navigation Service.");
 try:
    __builtin__.dz_deployer = True;
    # the values provided below become the initial AGS defaults
@@ -182,10 +282,10 @@ except Exception as err:
    exit -1;
    
 #------------------------------------------------------------------------------
-#- Step 40
+#- Step 50
 #- Run Navigation Delineation Service
 #------------------------------------------------------------------------------
-arcpy.AddMessage("Dry running Navigation Delineation Service");
+arcpy.AddMessage("Dry running Navigation Delineation Service.");
 try:
    __builtin__.dz_deployer = True;
    # the values provided below become the initial AGS defaults
@@ -209,10 +309,10 @@ except Exception as err:
    exit -1;
    
 #------------------------------------------------------------------------------
-#- Step 50
+#- Step 60
 #- Run Upstream Downstream Service
 #------------------------------------------------------------------------------
-arcpy.AddMessage("Dry running Upstream Downstream Service");
+arcpy.AddMessage("Dry running Upstream Downstream Service.");
 try:
    __builtin__.dz_deployer = True;
    # the values provided below become the initial AGS defaults
@@ -234,10 +334,10 @@ except Exception as err:
    exit -1;
    
 #------------------------------------------------------------------------------
-#- Step 60
+#- Step 70
 #- Create the sddraft file
 #------------------------------------------------------------------------------
-arcpy.AddMessage("Generating sddraft file");
+arcpy.AddMessage("Generating sddraft file.");
 try:
    sd = arcpy.CreateScratchName(
        "WATERS_Services"
@@ -278,10 +378,10 @@ except arcpy.ExecuteError:
    print(arcpy.GetMessages(2));
    
 #------------------------------------------------------------------------------
-#- Step 70
+#- Step 80
 #- Analyze the SD
 #------------------------------------------------------------------------------
-arcpy.AddMessage("Analyzing service definition");
+arcpy.AddMessage("Analyzing service definition.");
 analysis = arcpy.mapping.AnalyzeForSD(sddraft);
 
 if analysis['errors'] != {}:
@@ -318,10 +418,10 @@ if analysis['messages'] != {}:
          print
 
 #------------------------------------------------------------------------------
-#- Step 80
+#- Step 90
 #- Alter the sddraft file 
 #------------------------------------------------------------------------------
-arcpy.AddMessage("Altering sddraft as needed");       
+arcpy.AddMessage("Altering sddraft as needed.");       
 doc = DOM.parse(sddraft)
 for k, v in ags_properties.iteritems():
    doc = srv_property(doc,k,v);
@@ -334,10 +434,10 @@ doc.writexml(f);
 f.close();
 
 #------------------------------------------------------------------------------
-#- Step 90
+#- Step 100
 #- Deploy the service
 #------------------------------------------------------------------------------ 
-arcpy.AddMessage("Deploying to ArcGIS Server"); 
+arcpy.AddMessage("Deploying to ArcGIS Server."); 
 if analysis['errors'] == {}:
     # Execute StageService
     arcpy.StageService_server(sddraft,sd)
