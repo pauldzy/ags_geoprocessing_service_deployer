@@ -16,7 +16,7 @@ ags_con_name = "industux";
 
 # The name of your rad_ags SDE database connection in ArcCatalog
 # This can be changed as needed (new!)
-rad_con_name = "rad_ags";
+rad_con_name = "rad_ags-kong";
 
 # Service properties handled directly by arcpy.CreateGPSDDraft
 draft_service_name   = "WATERS_SERVICES";
@@ -24,7 +24,7 @@ draft_folder_name    = None;
 draft_summary        = "EPA Office of Water provides a suite of interoperable services that expose components that perform complex analysis and supporting strategic datasets, such as NHD, NHDPlus, and WBD."
 draft_tags           = "EPA";
 draft_execution_type = "ASynchronous";
-draft_max_records    = 10000;
+draft_max_records    = 100000;
 draft_minInstances   = 2;
 draft_maxInstances   = 4;
 draft_maxUsageTime   = 600;
@@ -201,8 +201,8 @@ old_file = open("WATERS_Services.pyt");
 for line in old_file:
    new_file.write(
       line.replace(
-          "Database Connections\\rad_ags.sde"
-         ,"Database Connections\\" + rad_con_name + ".sde"
+          "Database Connections\\\\rad_ags.sde"
+         ,"Database Connections\\\\" + rad_con_name + ".sde"
       )
    );
    
