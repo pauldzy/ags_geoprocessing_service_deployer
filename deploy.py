@@ -5,18 +5,20 @@ import xml.dom.minidom as DOM;
 
 #------------------------------------------------------------------------------
 #
-# Waters Services Geoprocessing Services Deployment Script
-# Version 2.0
+str_script   = "Waters Services Geoprocessing Services Deployment Script";
+num_version  = 2.0;
+str_author   = "Paul Dziemiela, Indus Corporation";
+str_last_mod = "June 3, 2015";
 #
 #------------------------------------------------------------------------------
 
 # The name of your ArcGIS Server administrator connection in ArcCatalog
 # This can be changed as needed
-ags_con_name = "industux";
+ags_con_name = "10_50_1_244";
 
 # The name of your rad_ags SDE database connection in ArcCatalog
 # This can be changed as needed (new!)
-rad_con_name = "rad_ags-kong";
+rad_con_name = "ATTAIN_OWDEV_rad_ags";
 
 # Service properties handled directly by arcpy.CreateGPSDDraft
 draft_service_name   = "WATERS_SERVICES";
@@ -24,11 +26,11 @@ draft_folder_name    = None;
 draft_summary        = "EPA Office of Water provides a suite of interoperable services that expose components that perform complex analysis and supporting strategic datasets, such as NHD, NHDPlus, and WBD."
 draft_tags           = "EPA";
 draft_execution_type = "ASynchronous";
-draft_max_records    = 100000;
-draft_minInstances   = 2;
+draft_max_records    = 500000;
+draft_minInstances   = 1;
 draft_maxInstances   = 4;
-draft_maxUsageTime   = 600;
-draft_maxWaitTime    = 60;
+draft_maxUsageTime   = 900;
+draft_maxWaitTime    = 900;
 draft_maxIdleTime    = 1800;
 # Hash of any additional general properties to be applied to the sddraft file
 ags_properties = {}
@@ -95,6 +97,16 @@ def soe_property(doc,soe,soeProperty,soePropertyValue):
    return doc;
    
 #------------------------------------------------------------------------------
+# Quick Introduction of script
+#------------------------------------------------------------------------------
+arcpy.AddMessage(" ");
+arcpy.AddMessage(str_script);
+arcpy.AddMessage("Version: " + str(num_version));
+arcpy.AddMessage("By " + str_author);
+arcpy.AddMessage("Last Modified: " + str_last_mod);
+arcpy.AddMessage(" ");
+
+#------------------------------------------------------------------------------
 #- Step 10
 #- Verify that the connections exist and are good
 #------------------------------------------------------------------------------
@@ -144,35 +156,7 @@ if arcpy.Exists(rad_con):
 else:
    arcpy.AddMessage(" ");
    arcpy.AddMessage("  Connection named Database Connections\\" + rad_con_name + ".sde not found.");
-   rad_con2 = os.environ['USERPROFILE'] + "\\AppData\\Roaming\\ESRI\\Desktop10.3\\ArcCatalog\\" + rad_con_name + ".sde"
-   
-   if arcpy.Exists(rad_con2):
-      rad_con = rad_con2;
-      arcpy.AddMessage("   Service will utilize geodatabase at " + rad_con);
-      
-   else:
-      arcpy.AddMessage(" ");
-      arcpy.AddMessage("  No luck checking " + rad_con2);
-      rad_con3 = os.environ['USERPROFILE'] + "\\AppData\\Roaming\\ESRI\\Desktop10.2\\ArcCatalog\\" + ags_con_name + ".sde"
-      
-      if arcpy.Exists(rad_con3):
-         rad_con = rad_con3;
-         arcpy.AddMessage("   Service will utilize geodatabase at " + rad_con);
-         
-      else:  
-         arcpy.AddMessage(" ");
-         arcpy.AddMessage("  No luck checking " + rad_con3);
-         rad_con4 = os.environ['USERPROFILE'] + "\\AppData\\Roaming\\ESRI\\Desktop10.1\\ArcCatalog\\" + ags_con_name + ".sde"
-         
-         if arcpy.Exists(rad_con4):
-            rad_con = rad_con4;
-            arcpy.AddMessage("   Service will utilize geodatabase at " + rad_con);
-            
-         else:  
-            arcpy.AddMessage(" ");
-            arcpy.AddMessage("  No luck checking " + rad_con4);
-            arcpy.AddMessage("  Unable to find a valid connection for " + rad_con_name);
-            exit(-1);
+   exit(-1);
 
 try:
    desc = arcpy.Describe(rad_con);
@@ -236,10 +220,19 @@ for line in old_file:
 new_file.close();
 old_file.close();
 
-xml_4 = temp_tool.replace(".pyt",".UpstreamDownstreamService.pyt.xml");
+xml_4 = temp_tool.replace(".pyt",".UpstreamDownstreamSearchService.pyt.xml");
 
 new_file = open(xml_4,'w');
-old_file = open("WATERS_Services.UpstreamDownstreamService.pyt.xml");
+old_file = open("WATERS_Services.UpstreamDownstreamSearchService.pyt.xml");
+for line in old_file:
+   new_file.write(line);
+new_file.close();
+old_file.close();
+
+xml_5 = temp_tool.replace(".pyt",".PointIndexingService.pyt.xml");
+
+new_file = open(xml_5,'w');
+old_file = open("WATERS_Services.PointIndexingService.pyt.xml");
 for line in old_file:
    new_file.write(line);
 new_file.close();
@@ -310,13 +303,13 @@ except Exception as err:
    
 #------------------------------------------------------------------------------
 #- Step 60
-#- Run Upstream Downstream Service
+#- Run Upstream Downstream Search Service
 #------------------------------------------------------------------------------
-arcpy.AddMessage("Dry running Upstream Downstream Service.");
+arcpy.AddMessage("Dry running Upstream Downstream Search Service.");
 try:
    __builtin__.dz_deployer = True;
    # the values provided below become the initial AGS defaults
-   updn_results = owservices.UpstreamDownstreamService(
+   updn_results = owservices.UpstreamDownstreamSearchService(
        pNavigationType='Upstream with Tributaries'       
       ,pStartPermanentIdentifier=None
       ,pStartReachCode=None
@@ -335,6 +328,34 @@ except Exception as err:
    
 #------------------------------------------------------------------------------
 #- Step 70
+#- Run Point Indexing Service
+#------------------------------------------------------------------------------
+arcpy.AddMessage("Dry running Point Indexing Service.");
+try:
+   __builtin__.dz_deployer = True;
+   # the values provided below become the initial AGS defaults
+   ptindx_results = owservices.PointIndexingService(
+       pGeometryFC=None
+      ,pGeometryText=None
+      ,pGeometryX=None
+      ,pGeometryY=None
+      ,pGeometryCSEsriName=None
+      ,pGeometryCSFactoryCode=None
+      ,pGeometryCSText=None
+      ,pIndexingMethod="DISTANCE"
+      ,pFcodeAllow=None
+      ,pFcodeDeny=None
+      ,pDistanceMaxDistKM=5
+      ,pRaindropPathMaxDistKM=5
+      ,pRaindropSnapMaxDistKM=0.25
+   );
+   
+except Exception as err:
+   arcpy.AddError(err)
+   exit -1;
+   
+#------------------------------------------------------------------------------
+#- Step 80
 #- Create the sddraft file
 #------------------------------------------------------------------------------
 arcpy.AddMessage("Generating sddraft file.");
@@ -354,7 +375,7 @@ try:
    );
    
    arcpy.CreateGPSDDraft(
-       result=[navsrv_results,navdelin_results,updn_results]
+       result=[navsrv_results,navdelin_results,updn_results,ptindx_results]
       ,out_sddraft=sddraft
       ,service_name=draft_service_name
       ,server_type="ARCGIS_SERVER"
@@ -378,7 +399,7 @@ except arcpy.ExecuteError:
    print(arcpy.GetMessages(2));
    
 #------------------------------------------------------------------------------
-#- Step 80
+#- Step 90
 #- Analyze the SD
 #------------------------------------------------------------------------------
 arcpy.AddMessage("Analyzing service definition.");
@@ -418,7 +439,7 @@ if analysis['messages'] != {}:
          print
 
 #------------------------------------------------------------------------------
-#- Step 90
+#- Step 100
 #- Alter the sddraft file 
 #------------------------------------------------------------------------------
 arcpy.AddMessage("Altering sddraft as needed.");       
@@ -434,7 +455,7 @@ doc.writexml(f);
 f.close();
 
 #------------------------------------------------------------------------------
-#- Step 100
+#- Step 110
 #- Deploy the service
 #------------------------------------------------------------------------------ 
 arcpy.AddMessage("Deploying to ArcGIS Server."); 
